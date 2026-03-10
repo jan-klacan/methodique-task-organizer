@@ -1,22 +1,32 @@
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+enum Priority {
+    High,
+    Medium,
+    Low,
+}
+
 // Define a Task struct with description and completed status, and derive Serialize and Deserialize for JSON handling
 #[derive(Serialize, Deserialize)]
 struct Task {
     description: String,
     completed: bool,
+    priority: Priority,
 }
 
 // Implement a constructor for Task to create a new task with a given description and default completed status of false
 impl Task {
-    fn new(description: String) -> Task {
+    fn new(description: String, priority: Priority) -> Task {
         Task {
             description,
             completed: false,
+            priority,
         }
     }
 }
