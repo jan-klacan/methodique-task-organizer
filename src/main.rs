@@ -1,5 +1,8 @@
+use serde::{Deserialize, Serialize};
+use std::fs;
 use std::io::{self, Write};
 
+#[derive(Serialize, Deserialize)]
 struct Task {
     description: String,
     completed: bool,
@@ -14,17 +17,35 @@ impl Task {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 struct TodoList {
     tasks: Vec<Task>,
 }
 
 impl TodoList {
     fn new() -> TodoList {
+        // Check if "tasks.json" exists and read its text
+        if let Ok(json_data) = fs::read_to_string("tasks.json") {
+            // Try to convert the JSON text back into a TodoList struct
+            if let Ok(parsed_list) = serde_json::from_str(&json_data) {
+                return parsed_list; // Success - return the saved list
+            }
+        }
+        // If the file doesn't exist yet or if parsing fails, return an empty TodoList
         TodoList { tasks: Vec::new() }
+    }
+
+    // Helper method to save the file
+    fn save_to_file(&self) {
+        // Convert the TodoList struct into a JSON string
+        let json = serde_json::to_string_pretty(&self).expect("Failed to format JSON.");
+        // Write the JSON string to "tasks.json" (creates the file if it doesn't exist)
+        fs::write("tasks.json", json).expect("Failed to write to file.");
     }
 
     fn add_task(&mut self, description: String) {
         self.tasks.push(Task::new(description));
+        self.save_to_file(); // Save the updated list to a file
         println!("\nTask added successfully.");
     }
 
@@ -45,6 +66,7 @@ impl TodoList {
             return;
         }
         self.tasks[index - 1].completed = true;
+        self.save_to_file(); // Save the updated list to a file
         println!("\nTask {} marked as completed.", index);
     }
 }
