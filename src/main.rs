@@ -49,6 +49,16 @@ impl TodoList {
         println!("\nTask added successfully.");
     }
 
+    fn delete_task(&mut self, index: usize) {
+        if index == 0 || index > self.tasks.len() {
+            println!("\nInvalid task number.");
+            return;
+        }
+        self.tasks.remove(index - 1);
+        self.save_to_file();
+        println!("Task deleted successfully.");
+    }
+
     fn list_tasks(&self) {
         if self.tasks.is_empty() {
             println!("\nThere are no tasks in the to-do list.");
@@ -78,8 +88,9 @@ fn main() {
         println!("1  Add Task");
         println!("2  List Tasks");
         println!("3  Complete Task");
-        println!("4  Exit");
-        print!("Enter the option number: ");
+        println!("4  Delete Task");
+        println!("5  Exit");
+        print!("Select an option number and press Enter: ");
         io::stdout().flush().unwrap();
 
         let mut choice = String::new();
@@ -114,6 +125,19 @@ fn main() {
                 }
             }
             "4" => {
+                print!("Enter the task number to delete: ");
+                io::stdout().flush().unwrap();
+                let mut index_str = String::new();
+                io::stdin()
+                    .read_line(&mut index_str)
+                    .expect("\nFailed to read input.");
+                if let Ok(index) = index_str.trim().parse::<usize>() {
+                    todo_list.delete_task(index);
+                } else {
+                    println!("\nPlease enter a valid task number.");
+                }
+            }
+            "5" => {
                 println!("\nExiting the application. See ya!");
                 break;
             }
