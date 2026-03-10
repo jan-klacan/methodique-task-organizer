@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{self, Write};
+use std::thread;
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize)]
 struct Task {
@@ -81,7 +83,36 @@ impl TodoList {
     }
 }
 
+fn dance_animation() {
+    let frames = [
+        "   \\(^-^)/ \n     | |   \n    /   \\  ",
+        "    (^-^)  \n   / | | \\ \n    /   \\  ",
+        "   /(^-^)\\ \n     | |   \n    /   \\  ",
+    ];
+
+    for _ in 0..3 {
+        for frame in frames {
+            // Clear the console
+            print!("\x1B[2J\x1B[1;1H");
+
+            // Print a loading message and the current frame of the dance
+            println!("Getting your to-do list ready...");
+            println!("{}", frame);
+            io::stdout().flush().unwrap();
+
+            // Pause for a moment before showing the next frame
+            thread::sleep(Duration::from_millis(400));
+        }
+    }
+
+    // Clear the console one last time before showing the main menu
+    print!("\x1B[2J\x1B[1;1H");
+}
+
 fn main() {
+    // Start the dance before loading anything else
+    dance_animation();
+
     let mut todo_list = TodoList::new();
     loop {
         println!("\n ### To-Do List ###");
