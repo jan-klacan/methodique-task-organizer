@@ -60,8 +60,28 @@ impl TodoList {
     }
 
     // Add a new task to the list and save the updated list to a file
-    fn add_task(&mut self, description: String) {
-        self.tasks.push(Task::new(description));
+    fn add_task(&mut self, input: String) {
+        let input = input.trim();
+
+        // Check for priority suffixes and extract tuples of (description, priority) based on the suffix
+        let (description, priority) = if input.ends_with("!high") {
+            (
+                input.trim_end_matches("!high").trim().to_string(),
+                Priority::High,
+            )
+        } else if input.ends_with("!low") {
+            (
+                input.trim_end_matches("!low").trim().to_string(),
+                Priority::Low,
+            )
+        } else {
+            (
+                input.trim_end_matches("!medium").trim().to_string(),
+                Priority::Medium,
+            )
+        };
+
+        self.tasks.push(Task::new(description, priority));
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask added successfully.");
     }
@@ -83,9 +103,40 @@ impl TodoList {
             println!("\nThere are no tasks in the to-do list.");
             return;
         }
+
+        // Iterate over the tasks and print their 1-based index, status, description, and priority with colors
         for (index, task) in self.tasks.iter().enumerate() {
             let status = if task.completed { "|X|" } else { "| |" };
-            println!("{} {} {}", index + 1, status, task.description);
+
+            // Format the priority text with colors
+            let priority_text = match task.priority {
+                Priority::High => "(High)".red().bold(),
+                Priority::Medium => "(Medium)".yellow(),
+                Priority::Low => "(Low)".green(),
+            };
+
+            // If the task is completed, print the line in a dimmed color; otherwise, print it normally
+            if task.completed {
+                println!(
+                    "{}",
+                    format!(
+                        "{} {} {} {}",
+                        index + 1,
+                        status,
+                        task.description,
+                        priority_text
+                    )
+                    .truecolor(100, 100, 100)
+                );
+            } else {
+                println!(
+                    "{} {} {} {}",
+                    index + 1,
+                    status,
+                    task.description,
+                    priority_text
+                );
+            }
         }
     }
 
@@ -184,6 +235,7 @@ fn main() {
 
         match choice.trim() {
             "1" => {
+                println!("  (Tip: add !high or !low at the end of your task to set priority)");
                 print!("Enter task description: ");
                 io::stdout().flush().unwrap();
                 let mut desc = String::new();
