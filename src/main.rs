@@ -152,19 +152,56 @@ impl TodoList {
     }
 }
 
-// Simple ASCII art animation of a wizard greeting the user
-fn wizard_greeting_animation() {
+// Simple ASCII art animation of a witch greeting the user
+fn witch_greeting_animation() {
     let frames = [
         // Frame 1
-        "\n               \n               \n        *      \n       . .     \n               ",
+        format!(
+            "\n               \n               \n        {}      \n       . .     \n               ",
+            "*".yellow().bold()
+        ),
         // Frame 2
-        "\n               \n       .*.     \n      * . *    \n       .*.     \n               ",
+        format!(
+            "\n               \n       {}     \n      {} . {}    \n       {}     \n               ",
+            ".*.".yellow(),
+            "*".yellow(),
+            "*".yellow(),
+            ".*.".yellow()
+        ),
         // Frame 3
-        "\n               \n      \\ | /    \n      - * -    \n      / | \\    \n               ",
+        format!(
+            "\n               \n      {}    \n      {} {} {}    \n      {}    \n               ",
+            "\\ | /".yellow().bold(),
+            "-".yellow().bold(),
+            "*".white().bold(),
+            "-".yellow().bold(),
+            "/ | \\".yellow().bold()
+        ),
         // Frame 4
-        "\n         _/    \n        / /    \n      _/____\\_ \n       (-.-) / \n       /(_)\\/  ",
+        format!(
+            "\n         {}    \n        {}    \n      {} \n      {}{}{} {} \n       {}  ",
+            "_/".purple(),
+            "/ /".purple(),
+            "_/____\\_".purple(),
+            "~".truecolor(139, 69, 19),
+            "(-.-)".green(),
+            "~".truecolor(139, 69, 19),
+            "/".truecolor(139, 69, 19), // Hair, Face, Hair, Wand
+            "/(_)\\/".truecolor(100, 100, 100)
+        ),
         // Frame 5
-        "\n         _/    \n        / /    \n      _/____\\_ \n       (o.o) /*\n       /(_)\\/  ",
+        format!(
+            "\n         {}    \n        {}    \n      {} \n      {}{}{} {}{}\n       {}  ",
+            "_/".purple(),
+            "/ /".purple(),
+            "_/____\\_".purple(),
+            "~".truecolor(139, 69, 19),
+            "(o.o)".green().bold(),
+            "~".truecolor(139, 69, 19),
+            "/".truecolor(139, 69, 19),
+            "*".yellow().bold(),
+            "/(_)\\/".truecolor(100, 100, 100)
+        ),
     ];
 
     for frame in frames {
@@ -173,26 +210,58 @@ fn wizard_greeting_animation() {
         io::stdout().flush().unwrap();
         thread::sleep(Duration::from_millis(400));
     }
-
     thread::sleep(Duration::from_millis(600));
 }
 
-// Simple ASCII art animation of a wizard disappearing when the user exits the program
-fn wizard_ending_animation() {
+// Simple ASCII art animation of a witch disappearing when the user exits the program
+fn witch_ending_animation() {
     let frames = [
         // Frame 1
-        "\n         _/    \n        / /    \n      _/____\\_ \n       (o.o) /*\n       /(_)\\/  ",
+        format!(
+            "\n         {}    \n        {}    \n      {} \n      {}{}{} {}{}\n       {}  ",
+            "_/".purple(),
+            "/ /".purple(),
+            "_/____\\_".purple(),
+            "~".truecolor(139, 69, 19),
+            "(o.o)".green().bold(),
+            "~".truecolor(139, 69, 19),
+            "/".truecolor(139, 69, 19),
+            "*".yellow().bold(),
+            "/(_)\\/".truecolor(100, 100, 100)
+        ),
         // Frame 2
-        "\n         _/    \n        / /    \n      _/____\\_ \n       (>.<) /**\n       /(_)\\/  ",
+        format!(
+            "\n         {}    \n        {}    \n      {} \n      {}{}{} {}{}\n       {}  ",
+            "_/".purple(),
+            "/ /".purple(),
+            "_/____\\_".purple(),
+            "~".truecolor(139, 69, 19),
+            "(>.<)".green(),
+            "~".truecolor(139, 69, 19),
+            "/".truecolor(139, 69, 19),
+            "**".yellow().bold(),
+            "/(_)\\/".truecolor(100, 100, 100)
+        ),
         // Frame 3
-        "\n               \n     \\ *  * /  \n     * POOF! * \n     / *  * \\  \n               ",
+        format!(
+            "\n               \n     {}  \n     {} \n     {}  \n               ",
+            "\\ *  * /".white(),
+            "* POOF! *".white().bold(),
+            "/ *  * \\".white()
+        ),
         // Frame 4
-        "\n               \n        .  .   \n      .      . \n        .  .   \n               ",
+        format!(
+            "\n               \n        {}   \n      {} \n        {}   \n               ",
+            ".  .".truecolor(150, 150, 150),
+            ".      .".truecolor(150, 150, 150),
+            ".  .".truecolor(150, 150, 150)
+        ),
         // Frame 5
-        "\n               \n               \n               \n               \n               ",
+        format!(
+            "\n               \n               \n               \n               \n               "
+        ),
     ];
 
-    // Animate the wizard disappearing
     for (i, frame) in frames.iter().enumerate() {
         print!("\x1B[2J\x1B[1;1H");
 
@@ -205,14 +274,13 @@ fn wizard_ending_animation() {
         }
         io::stdout().flush().unwrap();
     }
-    // Clear the screen one last time before exiting
     print!("\x1B[2J\x1B[1;1H");
 }
 
 // Main function to run the to-do list application
 fn main() {
-    // Display the wizard greeting animation
-    wizard_greeting_animation();
+    // Display the witch greeting animation
+    witch_greeting_animation();
 
     // Create a new TodoList instance (this will load existing tasks from "tasks.json" if it exists)
     let mut todo_list = TodoList::new();
@@ -274,8 +342,8 @@ fn main() {
                 }
             }
             "5" => {
-                // Display the wizard ending animation before exiting
-                wizard_ending_animation();
+                // Display the witch ending animation before exiting
+                witch_ending_animation();
                 break;
             }
             _ => {
