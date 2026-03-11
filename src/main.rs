@@ -54,17 +54,22 @@ impl Task {
     }
 }
 
-// Define a TodoList struct that contains a vector of Task structs, and derive Serialize and Deserialize for JSON handling
+// Define a TaskData struct that contains a vector of Task structs and derive Serialize and Deserialize for JSON handling; this struct will be used to read/write the list of tasks to/from a JSON file
 #[derive(Serialize, Deserialize)]
-struct TodoList {
+struct TaskData {
     tasks: Vec<Task>,
-    embedder: SentenceEmbeddingsModel, // Add a PyTorch sentence embedding model
+}
+
+// Define a TodoList struct that contains a TaskData struct for managing the list of tasks and a SentenceEmbeddingsModel for performing semantic similarity checks when adding new tasks
+struct TodoList {
+    data: TaskData,                 // Contains the list of tasks
+    embedder: SentenceEmbeddingsModel, // Pre-trained sentence embedding model for semantic similarity checks
 }
 
 // Implement methods for TodoList
 impl TodoList {
     fn new() -> TodoList {
-        // Initialize the PyTorch sentence embedding model when creating a new TodoList instance
+        // Print a colored message to the user indicating that the PyTorch model is being loaded
         println!(
             "{}",
             "Loading PyTorch model ... (this may take a moment)".cyan()
@@ -76,21 +81,21 @@ impl TodoList {
                 .create_model()
                 .expect("Failed to load ML model");
 
-        // Try to read the existing tasks from "tasks.json" and parse them into a vector of Task structs; if the file doesn't exist or parsing fails, start with an empty task list
-        let mut tasks = Vec::new();
+        // Attempt to read existing tasks from "tasks.json" and parse it into a TaskData struct; if the file does not exist or cannot be parsed, initialize with an empty task list
+        let mut data = TaskData { tasks: Vec::new() };
         if let Ok(json_data) = fs::read_to_string("tasks.json") {
-            if let Ok(parsed_list) = serde_json::from_str(&json_data) {
-                tasks = parsed_list;
+            if let Ok(parsed_data) = serde_json::from_str::<TaskData>(&json_data) {
+                data = parsed_data;
             }
         }
 
-        TodoList { tasks, embedder } // Return a new TodoList instance with the loaded tasks and the initialized sentence embedding model
+        TodoList { data, embedder } // Return a new instance of TodoList with the loaded data and embedder
     }
 
     // Helper method to save the file
     fn save_to_file(&self) {
         // Convert the TodoList struct into a JSON string
-        let json = serde_json::to_string_pretty(&self).expect("Failed to format JSON.");
+        let json = serde_json::to_string_pretty(&self.data).expect("Failed to format JSON.");
         // Write the JSON string to "tasks.json" (creates the file if it doesn't exist)
         fs::write("tasks.json", json).expect("Failed to write to file.");
     }
@@ -118,11 +123,11 @@ impl TodoList {
         };
 
         // ----- ML SEMANTIC SIMILARITY CHECK -----
-        if !self.tasks.is_empty() {
+        if !self.data.tasks.is_empty() {
             // Encode the NEW task into a vector
             let new_embedding = &self.embedder.encode(&[&description]).unwrap()[0];
 
-            for existing_task in &self.tasks {
+            for existing_task in &self.data.tasks {
                 if existing_task.completed {
                     continue;
                 } // Skip completed tasks
@@ -159,32 +164,32 @@ impl TodoList {
         }
         // --------------------------------------
 
-        self.tasks.push(Task::new(description, priority));
-        self.tasks.sort(); // Sort the tasks after adding a new one
+        self.data.tasks.push(Task::new(description, priority)); // Add the new task to the list
+        self.data.tasks.sort(); // Sort the tasks after adding a new one
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask added successfully.");
     }
 
     // Delete a task by its index (1-based) and save the updated list to a file
     fn delete_task(&mut self, index: usize) {
-        if index == 0 || index > self.tasks.len() {
+        if index == 0 || index > self.data.tasks.len() {
             println!("\nInvalid task number.");
             return;
         }
-        self.tasks.remove(index - 1);
+        self.data.tasks.remove(index - 1);
         self.save_to_file();
         println!("Task deleted successfully.");
     }
 
     // List all tasks with their status (completed or not)
     fn list_tasks(&self) {
-        if self.tasks.is_empty() {
+        if self.data.tasks.is_empty() {
             println!("\nThere are no tasks in the to-do list.");
             return;
         }
 
         // Iterate over the tasks and print their 1-based index, status, description, and priority with colors
-        for (index, task) in self.tasks.iter().enumerate() {
+        for (index, task) in self.data.tasks.iter().enumerate() {
             let status = if task.completed { "|X|" } else { "| |" };
 
             // Format the priority text with colors
@@ -221,12 +226,12 @@ impl TodoList {
 
     // Mark a task as completed by its index (1-based) and save the updated list to a file
     fn complete_task(&mut self, index: usize) {
-        if index == 0 || index > self.tasks.len() {
+        if index == 0 || index > self.data.tasks.len() {
             println!("\nInvalid task number.");
             return;
         }
-        self.tasks[index - 1].completed = true;
-        self.tasks.sort(); // Sort the tasks after marking one as completed
+        self.data.tasks[index - 1].completed = true;
+        self.data.tasks.sort(); // Sort the tasks after marking one as completed
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask {} marked as completed.", index);
     }
