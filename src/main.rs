@@ -5,7 +5,8 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+// Define a Priority enum with three levels of priority, and derive Serialize and Deserialize for JSON handling
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)] // Derive traits for comparison and sorting
 enum Priority {
     High,
     Medium,
@@ -13,20 +14,20 @@ enum Priority {
 }
 
 // Define a Task struct with description and completed status, and derive Serialize and Deserialize for JSON handling
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)] // Derive traits for comparison and sorting
 struct Task {
-    description: String,
     completed: bool,
     priority: Priority,
+    description: String,
 }
 
 // Implement a constructor for Task to create a new task with a given description and default completed status of false
 impl Task {
     fn new(description: String, priority: Priority) -> Task {
         Task {
-            description,
             completed: false,
             priority,
+            description,
         }
     }
 }
@@ -82,6 +83,7 @@ impl TodoList {
         };
 
         self.tasks.push(Task::new(description, priority));
+        self.tasks.sort(); // Sort the tasks based on: completed status, priority, and description in that order
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask added successfully.");
     }
@@ -147,6 +149,7 @@ impl TodoList {
             return;
         }
         self.tasks[index - 1].completed = true;
+        self.tasks.sort(); // Sort the tasks based on: completed status, priority, and description in that order
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask {} marked as completed.", index);
     }
