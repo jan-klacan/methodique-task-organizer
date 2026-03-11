@@ -1,4 +1,7 @@
 use colored::Colorize;
+use rust_bert::pipelines::sentence_embeddings::{
+    SentenceEmbeddingsBuilder, SentenceEmbeddingsModel, SentenceEmbeddingsModelType,
+};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{self, Write};
@@ -55,20 +58,33 @@ impl Task {
 #[derive(Serialize, Deserialize)]
 struct TodoList {
     tasks: Vec<Task>,
+    embedder: SentenceEmbeddingsModel, // Add a PyTorch sentence embedding model
 }
 
 // Implement methods for TodoList
 impl TodoList {
     fn new() -> TodoList {
-        // Check if "tasks.json" exists and read its text
+        // Initialize the PyTorch sentence embedding model when creating a new TodoList instance
+        println!(
+            "{}",
+            "Loading PyTorch model ... (this may take a moment)".cyan()
+        );
+
+        // Use the rust-bert library to load a pre-trained sentence embedding model from Hugging Face's model hub
+        let embedder =
+            SentenceEmbeddingsBuilder::remote(SentenceEmbeddingsModelType::AllMiniLmL12V2)
+                .create_model()
+                .expect("Failed to load ML model");
+
+        // Try to read the existing tasks from "tasks.json" and parse them into a vector of Task structs; if the file doesn't exist or parsing fails, start with an empty task list
+        let mut tasks = Vec::new();
         if let Ok(json_data) = fs::read_to_string("tasks.json") {
-            // Try to convert the JSON text back into a TodoList struct
             if let Ok(parsed_list) = serde_json::from_str(&json_data) {
-                return parsed_list; // Success - return the saved list
+                tasks = parsed_list;
             }
         }
-        // If the file doesn't exist yet or if parsing fails, return an empty TodoList
-        TodoList { tasks: Vec::new() }
+
+        TodoList { tasks, embedder } // Return a new TodoList instance with the loaded tasks and the initialized sentence embedding model
     }
 
     // Helper method to save the file
@@ -100,6 +116,48 @@ impl TodoList {
                 Priority::Medium,
             )
         };
+
+        // ----- ML SEMANTIC SIMILARITY CHECK -----
+        if !self.tasks.is_empty() {
+            // Encode the NEW task into a vector
+            let new_embedding = &self.embedder.encode(&[&description]).unwrap()[0];
+
+            for existing_task in &self.tasks {
+                if existing_task.completed {
+                    continue;
+                } // Skip completed tasks
+
+                // Encode the EXISTING task into a vector
+                let existing_embedding =
+                    &self.embedder.encode(&[&existing_task.description]).unwrap()[0];
+
+                // Calculate the cosine similarity between the new task and the existing task embeddings
+                let similarity = cosine_similarity(new_embedding, existing_embedding);
+
+                // If semantic match is > 80%, warn the user
+                if similarity > 0.80 {
+                    println!("\n{}", "Wait a second!".red().bold());
+                    println!(
+                        "This looks very similar to an existing task: {}",
+                        existing_task.description.yellow()
+                    );
+                    println!("(Semantic Match: {:.1}%)\n", similarity * 100.0);
+
+                    print!("Do you still want to add it? (y/n): ");
+                    io::stdout().flush().unwrap();
+                    let mut confirm = String::new();
+                    io::stdin().read_line(&mut confirm).unwrap();
+
+                    // If the user does not confirm with "y", cancel adding the task
+                    if !confirm.trim().eq_ignore_ascii_case("y") {
+                        println!("Task cancelled.");
+                        return; // Exit function without saving
+                    }
+                    break;
+                }
+            }
+        }
+        // --------------------------------------
 
         self.tasks.push(Task::new(description, priority));
         self.tasks.sort(); // Sort the tasks after adding a new one
