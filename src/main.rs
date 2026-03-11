@@ -139,8 +139,8 @@ impl TodoList {
                 // Calculate the cosine similarity between the new task and the existing task embeddings
                 let similarity = cosine_similarity(new_embedding, existing_embedding);
 
-                // If semantic match is > 80%, warn the user
-                if similarity > 0.80 {
+                // If semantic match is > 75%, warn the user
+                if similarity > 0.75 {
                     println!("\n{}", "Wait a second!".red().bold());
                     println!(
                         "This looks very similar to an existing task: {}",
