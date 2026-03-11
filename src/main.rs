@@ -5,28 +5,29 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+// Define a Priority enum with three levels: High, Medium, and Low, and derive Serialize and Deserialize for JSON handling, as well as traits for comparison and ordering
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Priority {
     High,
     Medium,
     Low,
 }
 
-// Define a Task struct with description and completed status, and derive Serialize and Deserialize for JSON handling
-#[derive(Serialize, Deserialize)]
+// Define a Task struct that contains a boolean for completion status, a Priority enum for task priority, and a String for the task description, and derive Serialize and Deserialize for JSON handling, as well as traits for comparison and ordering
+#[derive(Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 struct Task {
-    description: String,
-    completed: bool,
-    priority: Priority,
+    completed: bool,     // false (pending) comes before true (completed) when sorting
+    priority: Priority,  // High comes before Medium, which comes before Low when sorting
+    description: String, // ALphabetical order of descriptions is used as a tiebreaker when sorting tasks with the same completion status and priority
 }
 
-// Implement a constructor for Task to create a new task with a given description and default completed status of false
+// Implement a constructor method for Task to create a new task with a given description and priority, and set completed to false by default
 impl Task {
     fn new(description: String, priority: Priority) -> Task {
         Task {
-            description,
             completed: false,
             priority,
+            description,
         }
     }
 }
@@ -82,6 +83,7 @@ impl TodoList {
         };
 
         self.tasks.push(Task::new(description, priority));
+        self.tasks.sort(); // Sort the tasks after adding a new one
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask added successfully.");
     }
@@ -147,6 +149,7 @@ impl TodoList {
             return;
         }
         self.tasks[index - 1].completed = true;
+        self.tasks.sort(); // Sort the tasks after marking one as completed
         self.save_to_file(); // Save the updated list to a file
         println!("\nTask {} marked as completed.", index);
     }
