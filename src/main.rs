@@ -5,6 +5,25 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
+// Function to calculate cosine similarity between two slices of f32 values
+fn cosine_similarity(vec_a: &[f32], vec_b: &[f32]) -> f32 {
+    let mut dot_product = 0.0;
+    let mut norm_a = 0.0;
+    let mut norm_b = 0.0;
+
+    for (a, b) in vec_a.iter().zip(vec_b.iter()) {
+        dot_product += a * b;
+        norm_a += a * a;
+        norm_b += b * b;
+    }
+
+    if norm_a == 0.0 || norm_b == 0.0 {
+        return 0.0;
+    }
+
+    dot_product / (norm_a.sqrt() * norm_b.sqrt())
+}
+
 // Define a Priority enum with three levels: High, Medium, and Low, and derive Serialize and Deserialize for JSON handling, as well as traits for comparison and ordering
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Priority {
