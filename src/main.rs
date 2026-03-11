@@ -72,7 +72,7 @@ impl TodoList {
         // Print a colored message to the user indicating that the PyTorch model is being loaded
         println!(
             "{}",
-            "Loading PyTorch model ... (this may take a moment)".cyan()
+            "Loading required models ... (this may take a moment)".cyan()
         );
 
         // Use the rust-bert library to load a pre-trained sentence embedding model from Hugging Face's model hub
