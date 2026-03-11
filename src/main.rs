@@ -62,7 +62,7 @@ struct TaskData {
 
 // Define a TodoList struct that contains a TaskData struct for managing the list of tasks and a SentenceEmbeddingsModel for performing semantic similarity checks when adding new tasks
 struct TodoList {
-    data: TaskData,                 // Contains the list of tasks
+    data: TaskData,                    // Contains the list of tasks
     embedder: SentenceEmbeddingsModel, // Pre-trained sentence embedding model for semantic similarity checks
 }
 
